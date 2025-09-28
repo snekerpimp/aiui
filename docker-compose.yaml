@@ -1,0 +1,46 @@
+services:
+    comfyui-rocm:
+        build: .
+        network_mode: host
+        restart: unless-stopped
+        devices:
+            - /dev/kfd
+            - /dev/dri
+        group_add:
+            - video
+        ipc: host
+        cap_add:
+            - SYS_PTRACE
+        security_opt:
+            - seccomp=unconfined
+        privileged: true
+        container_name: comfyui-rocm-container
+        image: comfyui-rocm
+        volumes:
+            - ./comfyui/models:/workload/ComfyUI/models
+        command: bash -c "python /workload/ComfyUI/main.py --listen"
+
+    ollama:
+        devices:
+            - /dev/kfd
+            - /dev/dri
+        restart: unless-stopped
+        volumes:
+            - ./ollama:/root/.ollama
+        ports:
+            - 11434:11434
+        container_name: ollama
+        image: ollama/ollama:rocm
+
+    openwebui:
+        image: ghcr.io/open-webui/open-webui:main
+        restart: unless-stopped
+        ports:
+            - "3000:8080"
+        volumes:
+            - ./open-webui:/app/backend/data
+
+volumes:
+    open-webui:
+    ollama:
+    comfyui-rocm:
